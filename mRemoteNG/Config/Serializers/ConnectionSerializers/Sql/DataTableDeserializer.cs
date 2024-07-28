@@ -77,6 +77,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
 
         private void PopulateConnectionInfoFromDatarow(DataRow dataRow, ConnectionInfo connectionInfo)
         {
+            throw new NotImplementedException("Requires implementation of SecureString password handling");
             connectionInfo.Name = (string)dataRow["Name"];
 
             // This throws a NPE - Parent is a connectionInfo object which will be null at this point.
@@ -111,7 +112,8 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Sql
             connectionInfo.OpeningCommand = (string)dataRow["OpeningCommand"];
             connectionInfo.OpeningCommand = (string)dataRow["OpeningCommand"];
             connectionInfo.Panel = (string)dataRow["Panel"];
-            connectionInfo.Password = DecryptValue((string)dataRow["Password"]);
+            //TODO: implement
+            //connectionInfo.SecurePassword = dataRow["Password"]; // DecryptValue((string)dataRow["Password"]);
             connectionInfo.Port = (int)dataRow["Port"];
             connectionInfo.PostExtApp = (string)dataRow["PostExtApp"];
             connectionInfo.PreExtApp = (string)dataRow["PreExtApp"];

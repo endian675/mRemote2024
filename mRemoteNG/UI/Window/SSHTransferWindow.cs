@@ -10,6 +10,7 @@ using mRemoteNG.UI.Controls;
 using mRemoteNG.UI.Forms;
 using mRemoteNG.Resources.Language;
 using System.Runtime.Versioning;
+using mRemoteNG.Security;
 
 namespace mRemoteNG.UI.Window
 {
@@ -337,10 +338,10 @@ namespace mRemoteNG.UI.Window
             set => txtUser.Text = value;
         }
 
-        public string Password
+        public EncryptedSecureString Password
         {
-            get => txtPassword.Text;
-            set => txtPassword.Text = value;
+            get => new EncryptedSecureString().SetValue(txtPassword.Text);
+            set => txtPassword.Text = "WARNING-UNENCRYPTED-PASSWORD-IN-MEMORY " + value.GetClearTextSecureValue();
         }
 
         #endregion

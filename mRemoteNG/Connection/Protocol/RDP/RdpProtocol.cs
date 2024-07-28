@@ -20,6 +20,8 @@ using System.Runtime.Versioning;
 using FileDialog = Microsoft.Win32.FileDialog;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 using System.DirectoryServices.ActiveDirectory;
+using mRemoteNG.Security;
+using System.Security;
 
 namespace mRemoteNG.Connection.Protocol.RDP
 {
@@ -424,9 +426,12 @@ namespace mRemoteNG.Connection.Protocol.RDP
                 switch (connectionInfo.RDGatewayUseConnectionCredentials)
                 {
                     case RDGatewayUseConnectionCredentials.Yes:
-                        _rdpClient.TransportSettings2.GatewayUsername = connectionInfo.Username;
-                        _rdpClient.TransportSettings2.GatewayPassword = connectionInfo.Password;
-                        _rdpClient.TransportSettings2.GatewayDomain = connectionInfo?.Domain;
+                        using (var securePw = connectionInfo.SecurePassword.GetClearTextSecureValue())
+                        {
+                            _rdpClient.TransportSettings2.GatewayUsername = connectionInfo.Username;
+                            _rdpClient.TransportSettings2.GatewayPassword = SecureStringExtensions.ConvertToUnsecureString(securePw);
+                            _rdpClient.TransportSettings2.GatewayDomain = connectionInfo?.Domain;
+                        }
                         break;
                     case RDGatewayUseConnectionCredentials.SmartCard:
                         _rdpClient.TransportSettings2.GatewayCredSharing = 0;
@@ -536,7 +541,8 @@ namespace mRemoteNG.Connection.Protocol.RDP
                 }
 
                 string userName = connectionInfo?.Username ?? "";
-                string password = connectionInfo?.Password ?? "";
+                EncryptedSecureString encryptedSecurePassword = connectionInfo?.SecurePassword ?? null;
+                string password = "WRONG";
                 string domain = connectionInfo?.Domain ?? "";
                 string userViaApi = connectionInfo?.UserViaAPI ?? "";
                 string pkey = "";
@@ -607,7 +613,7 @@ namespace mRemoteNG.Connection.Protocol.RDP
                 }
                 else
                 {
-                    _rdpClient.AdvancedSettings2.ClearTextPassword = password;
+                    _rdpClient.AdvancedSettings2.ClearTextPassword = encryptedSecurePassword?.GetClearTextValue(); // password;
                 }
 
                 if (string.IsNullOrEmpty(domain))

@@ -28,7 +28,7 @@ namespace mRemoteNGTests.Tools
                 Hostname = TestString,
                 Port = Port,
                 Username = TestString,
-                Password = TestString,
+                SecurePassword = new mRemoteNG.Security.EncryptedSecureString().SetValue(TestString),
                 Domain = TestString,
                 Description = TestString,
                 MacAddress = TestString,

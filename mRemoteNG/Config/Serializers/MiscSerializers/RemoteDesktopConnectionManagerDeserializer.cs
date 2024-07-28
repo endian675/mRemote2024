@@ -11,6 +11,11 @@ using mRemoteNG.Tree;
 using mRemoteNG.Tree.Root;
 using mRemoteNG.Resources.Language;
 using System.Runtime.Versioning;
+using System.Security;
+using mRemoteNG.Security;
+using mRemoteNG.Security.SymmetricEncryption;
+using mRemoteNG.Security.Factories;
+using Org.BouncyCastle.Crypto.Modes;
 
 namespace mRemoteNG.Config.Serializers.MiscSerializers
 {
@@ -162,13 +167,12 @@ namespace mRemoteNG.Config.Serializers.MiscSerializers
                 XmlNode passwordNode = logonCredentialsNode.SelectSingleNode("./password");
                 if (_schemaVersion == 1) // Version 2.2 allows clear text passwords
                 {
-                    connectionInfo.Password = passwordNode?.Attributes?["storeAsClearText"]?.Value == "True"
-                        ? passwordNode.InnerText
-                        : DecryptRdcManPassword(passwordNode?.InnerText);
+                    EncryptedSecureString s = new EncryptedSecureString().SetValue(passwordNode?.Attributes?["storeAsClearText"]?.Value == "True" ? passwordNode.InnerText : DecryptRdcManPassword(passwordNode?.InnerText));
+                    connectionInfo.SecurePassword = s;
                 }
                 else
                 {
-                    connectionInfo.Password = DecryptRdcManPassword(passwordNode?.InnerText);
+                    connectionInfo.SecurePassword = new EncryptedSecureString().SetValue(DecryptRdcManPassword(passwordNode?.InnerText));
                 }
 
                 connectionInfo.Domain = logonCredentialsNode.SelectSingleNode("./domain")?.InnerText ?? string.Empty;

@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using mRemoteNG.App;
 using mRemoteNG.Messages;
 using mRemoteNG.Resources.Language;
+using mRemoteNG.Security;
 
 namespace mRemoteNG.Connection.Protocol.PowerShell
 {
@@ -188,22 +189,28 @@ namespace mRemoteNG.Connection.Protocol.PowerShell
 
                 // Setup process for script with arguments
                 //* The -NoProfile parameter would be a valuable addition but should be able to be deactivated.
-                string arguments = $@"-NoExit -Command ""& {{ {psScriptBlock} }}"" -Hostname ""'{_connectionInfo.Hostname}'"" -Username ""'{psUsername}'"" -Password ""'{_connectionInfo.Password}'"" -LoginAttempts {psLoginAttempts}";
-                string hostname = _connectionInfo.Hostname.Trim().ToLower();
-                bool useLocalHost = hostname == "" || hostname.Equals("localhost");
-                if (useLocalHost)
+                using (EncryptedSecureString encPassword = _connectionInfo.SecurePassword)
                 {
-                    arguments = $@"-NoExit";
+                    using (var clearSecurePassword = encPassword.GetClearTextSecureValue())
+                    {
+                        string hostname = _connectionInfo.Hostname.Trim().ToLower();
+                        bool useLocalHost = hostname == "" || hostname.Equals("localhost");
+                        string arguments = $@"-NoExit";
+                        if (useLocalHost == false)
+                        {
+                            arguments = $@"-NoExit -Command ""& {{ {psScriptBlock} }}"" -Hostname ""'{_connectionInfo.Hostname}'"" -Username ""'{psUsername}'"" -Password ""'{clearSecurePassword.ConvertToUnsecureString()}'"" -LoginAttempts {psLoginAttempts}";
+                        }
+                        _consoleControl.StartProcess(psExe, arguments);
+                        arguments = null;
+                        while (!_consoleControl.IsHandleCreated) break;
+                        _handle = _consoleControl.Handle;
+                        NativeMethods.SetParent(_handle, InterfaceControl.Handle);
+
+                        Resize(this, new EventArgs());
+                        base.Connect();
+                        return true;
+                    }
                 }
-                _consoleControl.StartProcess(psExe, arguments);
-
-                while (!_consoleControl.IsHandleCreated) break;
-                _handle = _consoleControl.Handle;
-                NativeMethods.SetParent(_handle, InterfaceControl.Handle);
-
-                Resize(this, new EventArgs());
-                base.Connect();
-                return true;
             }
             catch (Exception ex)
             {

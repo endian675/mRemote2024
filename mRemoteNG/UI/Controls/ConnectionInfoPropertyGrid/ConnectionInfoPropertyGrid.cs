@@ -242,7 +242,7 @@ namespace mRemoteNG.UI.Controls.ConnectionInfoPropertyGrid
                 || SelectedConnectionInfo.ExternalCredentialProvider == ExternalCredentialProvider.ClickstudiosPasswordState)
             {
                 strHide.Add(nameof(AbstractConnectionRecord.Username));
-                strHide.Add(nameof(AbstractConnectionRecord.Password));
+                strHide.Add(nameof(AbstractConnectionRecord.SecurePassword));
                 strHide.Add(nameof(AbstractConnectionRecord.Domain));
             }
 

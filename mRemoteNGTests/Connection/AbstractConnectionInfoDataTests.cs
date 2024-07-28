@@ -93,7 +93,7 @@ public class AbstractConnectionInfoDataTests
     {
         var wasCalled = false;
         _testAbstractConnectionInfoData.PropertyChanged += (sender, args) => wasCalled = true;
-        _testAbstractConnectionInfoData.Password = "a";
+        _testAbstractConnectionInfoData.SecurePassword = new mRemoteNG.Security.EncryptedSecureString("a");
         Assert.That(wasCalled, Is.True);
     }
 

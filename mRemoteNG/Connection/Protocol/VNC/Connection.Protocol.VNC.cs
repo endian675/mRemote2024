@@ -145,7 +145,7 @@ namespace mRemoteNG.Connection.Protocol.VNC
                 _vnc.ConnectComplete += VNCEvent_Connected;
                 _vnc.ConnectionLost += VNCEvent_Disconnected;
                 FrmMain.ClipboardChanged += VNCEvent_ClipboardChanged;
-                if (!Force.HasFlag(ConnectionInfo.Force.NoCredentials) && _info?.Password?.Length > 0)
+                if (!Force.HasFlag(ConnectionInfo.Force.NoCredentials) && _info?.SecurePassword != null) // _info?.SecurePassword? > 0)
                 {
                     _vnc.GetPassword = VNCEvent_Authenticate;
                 }
@@ -225,7 +225,7 @@ namespace mRemoteNG.Connection.Protocol.VNC
 
         private string VNCEvent_Authenticate()
         {
-            return _info.Password;
+            return _info.SecurePassword.GetClearTextValue();
         }
 
         #endregion

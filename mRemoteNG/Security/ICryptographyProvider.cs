@@ -15,5 +15,6 @@ namespace mRemoteNG.Security
         string Encrypt(string plainText, SecureString encryptionKey);
 
         string Decrypt(string cipherText, SecureString decryptionKey);
+        SecureString Decrypt(SecureString cipherText, SecureString decryptionKey);
     }
 }

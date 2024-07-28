@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Security;
+using System.Windows.Navigation;
 using mRemoteNG.Security.SymmetricEncryption;
 using Org.BouncyCastle.Security;
 
@@ -24,6 +25,11 @@ namespace mRemoteNG.Security
             _cryptographyProvider = new AeadCryptographyProvider();
         }
 
+        public EncryptedSecureString(string unencryptedValue) : this()
+        {
+            SetValue(unencryptedValue);
+        }
+
         public EncryptedSecureString(ICryptographyProvider cryptographyProvider)
         {
             _secureString = new SecureString();
@@ -37,10 +43,28 @@ namespace mRemoteNG.Security
             return clearText;
         }
 
-        public void SetValue(string value)
+        public string GetEncryptedValue()
+        {
+            return _secureString.ConvertToUnsecureString();
+        }
+
+        public SecureString GetClearTextSecureValue()
+        {
+            var secure = _cryptographyProvider.Decrypt(_secureString, MachineKey);
+            return secure;
+        }
+
+        public EncryptedSecureString SetEncryptedValue(string value)
+        {
+            _secureString = value.ConvertToSecureString();
+            return this;
+        }
+
+        public EncryptedSecureString SetValue(string value)
         {
             string cipherText = _cryptographyProvider.Encrypt(value, MachineKey);
             _secureString = cipherText.ConvertToSecureString();
+            return this;
         }
 
         private static SecureString GenerateNewMachineKey(int keySize)

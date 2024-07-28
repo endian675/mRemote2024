@@ -75,6 +75,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
 
         private ConnectionInfo ParseConnectionInfo(IList<string> headers, string[] connectionCsv)
         {
+            throw new NotImplementedException("TODO: Requires implementation of SecureString passwords");
             TreeNodeType nodeType = headers.Contains("NodeType")
                 ? (TreeNodeType)Enum.Parse(typeof(TreeNodeType), connectionCsv[headers.IndexOf("NodeType")], true)
                 : TreeNodeType.Connection;
@@ -111,9 +112,9 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv
                 ? connectionCsv[headers.IndexOf("Username")]
                 : "";
 
-            connectionRecord.Password = headers.Contains("Password")
-                ? connectionCsv[headers.IndexOf("Password")]
-                : "";
+            //connectionRecord.SecurePassword = headers.Contains("SecurePassword")
+            //    ? connectionCsv[headers.IndexOf("SecurePassword")]
+            //    : "";
 
             connectionRecord.Domain = headers.Contains("Domain")
                 ? connectionCsv[headers.IndexOf("Domain")]

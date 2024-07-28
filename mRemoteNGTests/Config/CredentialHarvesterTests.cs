@@ -31,7 +31,7 @@ public class CredentialHarvesterTests
     [Test]
     public void HarvestsUsername()
     {
-        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain", Password = "mypass" };
+        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain" }; 
         var xdoc = CreateTestData(connection);
         var credentials = _credentialHarvester.Harvest(xdoc, _key);
         Assert.That(credentials.Single().Username, Is.EqualTo(connection.Username));
@@ -40,7 +40,7 @@ public class CredentialHarvesterTests
     [Test]
     public void HarvestsDomain()
     {
-        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain", Password = "mypass" };
+        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain" };
         var xdoc = CreateTestData(connection);
         var credentials = _credentialHarvester.Harvest(xdoc, _key);
         Assert.That(credentials.Single().Domain, Is.EqualTo(connection.Domain));
@@ -49,10 +49,10 @@ public class CredentialHarvesterTests
     [Test]
     public void HarvestsPassword()
     {
-        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain", Password = "mypass" };
+        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain" , SecurePassword = new EncryptedSecureString().SetValue("mypass") };
         var xdoc = CreateTestData(connection);
         var credentials = _credentialHarvester.Harvest(xdoc, _key);
-        Assert.That(credentials.Single().Password.ConvertToUnsecureString(), Is.EqualTo(connection.Password));
+        Assert.That(credentials.Single().Password.ConvertToUnsecureString(), Is.EqualTo(connection.SecurePassword.GetClearTextValue()));
     }
 
     [Test]
@@ -91,7 +91,7 @@ public class CredentialHarvesterTests
     [Test]
     public void CredentialMapCorrectForSingleCredential()
     {
-        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain", Password = "mypass" };
+        var connection = new ConnectionInfo { Username = "myuser", Domain = "somedomain" }; 
         var connectionGuid = Guid.Parse(connection.ConstantID);
         var xdoc = CreateTestData(connection);
         _credentialHarvester.Harvest(xdoc, _key);

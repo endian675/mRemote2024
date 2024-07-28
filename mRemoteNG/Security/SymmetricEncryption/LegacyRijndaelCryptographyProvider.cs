@@ -100,5 +100,15 @@ namespace mRemoteNG.Security.SymmetricEncryption
                 throw new EncryptionException(Language.ErrorDecryptionFailed, ex);
             }
         }
+
+        public string Decrypt(SecureString cipherText, SecureString decryptionKey)
+        {
+            throw new NotImplementedException();
+        }
+
+        SecureString ICryptographyProvider.Decrypt(SecureString cipherText, SecureString decryptionKey)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

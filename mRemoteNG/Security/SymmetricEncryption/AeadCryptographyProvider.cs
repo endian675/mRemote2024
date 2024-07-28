@@ -17,6 +17,8 @@ using Org.BouncyCastle.Crypto.Modes;
 using Org.BouncyCastle.Crypto.Parameters;
 using Org.BouncyCastle.Security;
 using mRemoteNG.Resources.Language;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 
 // ReSharper disable ArrangeAccessorOwnerBody
 
@@ -183,6 +185,139 @@ namespace mRemoteNG.Security.SymmetricEncryption
             return decryptedText;
         }
 
+        public SecureString Decrypt(SecureString cipherText, SecureString decryptionKey)
+        {
+            var decryptedText = SimpleDecryptWithPassword(cipherText, decryptionKey);
+            return decryptedText;
+        }
+
+        private SecureString SimpleDecryptWithPassword(SecureString encryptedMessage, SecureString decryptionKey, int nonSecretPayloadLength = 0)
+        {
+            if (encryptedMessage == null || encryptedMessage.Length == 0)
+                return new SecureString(); // Return an empty SecureString instead of throwing an exception
+
+            byte[] cipherText = null;
+            IntPtr unmanagedEncryptedMessage = IntPtr.Zero;
+
+            try
+            {
+                // Convert SecureString to byte array
+                unmanagedEncryptedMessage = Marshal.SecureStringToGlobalAllocUnicode(encryptedMessage);
+                int encryptedLength = Marshal.ReadInt32(unmanagedEncryptedMessage, -4) / 2;
+                byte[] encryptedBytes = new byte[encryptedLength * 2];
+                Marshal.Copy(unmanagedEncryptedMessage, encryptedBytes, 0, encryptedBytes.Length);
+
+                // Convert to Base64 and then to byte array
+                string base64 = Encoding.Unicode.GetString(encryptedBytes);
+                cipherText = Convert.FromBase64String(base64);
+            }
+            finally
+            {
+                if (unmanagedEncryptedMessage != IntPtr.Zero)
+                {
+                    Marshal.ZeroFreeGlobalAllocUnicode(unmanagedEncryptedMessage);
+                }
+                if (cipherText != null)
+                {
+                    Array.Clear(cipherText, 0, cipherText.Length);
+                }
+            }
+
+            byte[] plainText = null;
+            try
+            {
+                plainText = SimpleDecryptWithPassword(cipherText, decryptionKey, nonSecretPayloadLength);
+                if (plainText == null)
+                    return new SecureString();
+
+                SecureString decryptedSecret = new SecureString();
+                for (int i = 0; i < plainText.Length; i += 2) // Assuming Unicode encoding
+                {
+                    decryptedSecret.AppendChar((char)(plainText[i] | (plainText[i + 1] << 8)));
+                }
+                decryptedSecret.MakeReadOnly();
+                return decryptedSecret;
+            }
+            finally
+            {
+                if (plainText != null)
+                {
+                    Array.Clear(plainText, 0, plainText.Length);
+                }
+            }
+        }
+
+        private byte[] SimpleDecryptWithPassword(byte[] encryptedMessage, SecureString password, int nonSecretPayloadLength = 0)
+        {
+            // User Error Checks
+            if (password == null || password.Length < MinPasswordLength)
+                throw new ArgumentException($"Must have a password of at least {MinPasswordLength} characters!", nameof(password));
+            if (encryptedMessage == null || encryptedMessage.Length == 0)
+                throw new ArgumentException(@"Encrypted Message Required!", nameof(encryptedMessage));
+
+            // Grab Salt from Payload
+            byte[] salt = new byte[SaltBitSize / 8];
+            Buffer.BlockCopy(encryptedMessage, nonSecretPayloadLength, salt, 0, salt.Length);
+
+            // Generate Key
+            byte[] key = null;
+            try
+            {
+                key = DeriveKeyFromSecureString(password, salt);
+                return SimpleDecrypt(encryptedMessage, key, salt.Length + nonSecretPayloadLength);
+            }
+            finally
+            {
+                if (key != null)
+                {
+                    Array.Clear(key, 0, key.Length);
+                }
+            }
+        }
+
+        private byte[] DeriveKeyFromSecureString(SecureString password, byte[] salt)
+        {
+            byte[] passwordBytes = null;
+            IntPtr unmanagedPassword = IntPtr.Zero;
+            GCHandle? pinnedPasswordBytes = null;
+
+            try
+            {
+                unmanagedPassword = Marshal.SecureStringToGlobalAllocUnicode(password);
+                int passwordLength = Marshal.ReadInt32(unmanagedPassword, -4) / 2; // Get the length of the SecureString
+
+                passwordBytes = new byte[passwordLength * 2];
+                pinnedPasswordBytes = GCHandle.Alloc(passwordBytes, GCHandleType.Pinned);
+
+                Marshal.Copy(unmanagedPassword, passwordBytes, 0, passwordBytes.Length);
+
+                using (var deriveBytes = new Rfc2898DeriveBytes(passwordBytes, salt, KeyDerivationIterations, HashAlgorithmName.SHA256))
+                {
+                    return deriveBytes.GetBytes(KeyBitSize / 8);
+                }
+            }
+            finally
+            {
+                if (unmanagedPassword != IntPtr.Zero)
+                {
+                    Marshal.ZeroFreeGlobalAllocUnicode(unmanagedPassword);
+                }
+
+                if (passwordBytes != null)
+                {
+                    Array.Clear(passwordBytes, 0, passwordBytes.Length);
+                }
+
+                if (pinnedPasswordBytes.HasValue)
+                {
+                    pinnedPasswordBytes.Value.Free();
+                }
+            }
+        }
+
+
+
+
         private string SimpleDecryptWithPassword(string encryptedMessage, SecureString decryptionKey, int nonSecretPayloadLength = 0)
         {
             if (string.IsNullOrWhiteSpace(encryptedMessage))
@@ -257,5 +392,7 @@ namespace mRemoteNG.Security.SymmetricEncryption
             _random.NextBytes(salt);
             return salt;
         }
+
+
     }
 }

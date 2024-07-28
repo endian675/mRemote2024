@@ -186,7 +186,8 @@ namespace mRemoteNG.Tools
                             replacement = Properties.OptionsCredentialsPage.Default.DefaultUsername;
                     break;
                 case "password":
-                    replacement = _connectionInfo.Password;
+                    throw new NotImplementedException("TODO: implement encrypted SecureString password handling");
+                    // replacement = _connectionInfo.Password;
                     if (string.IsNullOrEmpty(replacement) && Properties.OptionsCredentialsPage.Default.EmptyCredentials == "custom")
                         replacement = new LegacyRijndaelCryptographyProvider().Decrypt(Convert.ToString(Properties.OptionsCredentialsPage.Default.DefaultPassword), Runtime.EncryptionKey);
                     break;

@@ -122,7 +122,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv.RemoteDesktopMa
 
             string username = connectionCsv[headers.IndexOf("CredentialUserName")];
             string domain = connectionCsv[headers.IndexOf("CredentialDomain")];
-            string password = connectionCsv[headers.IndexOf("CredentialPassword")];
+            string securepassword = connectionCsv[headers.IndexOf("CredentialPassword")];
 
             ConnectionInfo connectionInfo = new(Guid.NewGuid().ToString())
             {
@@ -130,7 +130,7 @@ namespace mRemoteNG.Config.Serializers.ConnectionSerializers.Csv.RemoteDesktopMa
                 Hostname = hostString,
                 Port = port,
                 Username = username,
-                Password = password,
+                // SecurePassword = securepassword,
                 Domain = domain,
                 Icon = connectionType.IconName ?? "mRemoteNG",
                 Description = description,
